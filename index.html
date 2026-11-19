@@ -101,7 +101,13 @@
   #front > .front-content { order: 1; position: relative; z-index: 2; }
   .building { position: relative; order: 2; z-index: 1; pointer-events: none; opacity: .9;
     width: 100%; max-width: 480px; margin: auto auto 0; padding-top: 6px; }
-  .building svg { display: block; }
+  .building img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: left bottom;
+  }
   .front-head { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px 10px 4px; }
   .front-head .sub { font-size: 11.4px; line-height: 1.15; color: var(--muted); text-transform: uppercase; }
   .front-head .sub b { color: var(--primary); font-weight: 600; }
@@ -143,9 +149,13 @@
   .back-face .rhead .t3 { font-size: 10px; color: var(--muted); font-family: monospace; }
   .esc-bar { background: #233a5e; color: #fff; font-size: 12.5px; font-weight: 600; padding: 5px 10px; }
   .esc-row { display: flex; gap: 12px; padding: 16px 12px; align-items: center; justify-content: center; border-bottom: 1px solid var(--line); }
-  .esc-card { width: 143px; height: 107px; border-radius: 10px; font-size: 11.5px !important; background: linear-gradient(135deg,#2f2f9e,#5b2fb0);
-    display: grid; place-items: center; color: #ffd84a; font-size: 9px; font-weight: 700; letter-spacing: .5px; text-align: center; }
-
+  .esc-card {
+  width: 143px;
+  height: 107px;
+  border-radius: 10px;
+  object-fit: cover;
+  display: block;
+}
   /* Toast */
   .toast { position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); background: rgba(30,30,30,.9);
     color: #fff; font-size: 12px; padding: 8px 14px; border-radius: 18px; opacity: 0; transition: opacity .2s;
@@ -271,7 +281,7 @@
     <div class="front-content">
       <div class="front-head">
         <span class="logo-lg"></span>
-        <div class="sub">UNIVERSIDAD<br><b>DE MÁLAGA</b></div>
+        <div class="sub">UNIVERSIDAD<br>DE MÁLAGA</div>
         <div class="sep"></div>
         <div class="web">uma<span>.es</span></div>
       </div>
@@ -315,7 +325,7 @@
     <div class="esc-bar">European Student Card · DEMO</div>
     <div class="esc-row">
       <span class="qr" data-size="130" data-n="57"></span>
-      <div class="esc-card">★ ★ ★<br>EXAMPLE<br>STUDENT<br>★ ★ ★</div>
+      <img class="esc-card" src="carnet-europeo.png" alt="European Student Card">
     </div>
     <div class="demo-band">DEMO · NO OFICIAL · SIN VALIDEZ</div>
   </div>
@@ -466,7 +476,7 @@
       // queda en blanco; junto al botón y detrás de la torre sí se ve.
       const top0 = el.getBoundingClientRect().top;
       const pill = el.parentElement.querySelector('.role-pill span');
-      const bld = el.parentElement.querySelector('.building svg');
+      const bld = el.parentElement.querySelector('.building img'));
       const OFF = th * (1 / 2 + 1 / 3);              // desfase vertical del mosaico
       // A la altura de «Estudiante»: una fila completa bajo la franja del nombre y otra cortada
       // por la mitad en el borde inferior del botón. Se ajusta el espacio sobre el botón para que cuadre.
@@ -509,12 +519,13 @@
   // La torre mide 100 px menos de alto que de ancho; el viewBox se ensancha para que el dibujo
   // conserve sus proporciones (más pequeño) y el ala lateral llegue hasta el borde derecho.
   function sizeTower() {
-    const svg = document.querySelector('#building svg');
-    const W = document.getElementById('building').clientWidth;
-    if (!svg || !W) return;
-    const h = Math.max(160, W - 100);
-    svg.style.height = h + 'px';
-    svg.setAttribute('viewBox', `0 0 ${(300 * W / h).toFixed(1)} 300`);
+  const img = document.querySelector('#building img');
+  const W = document.getElementById('building').clientWidth;
+
+  if (!img || !W) return;
+
+  const h = Math.max(160, W - 100);
+  img.style.height = h + 'px';
   }
   window.addEventListener('resize', () => { sizeTower(); drawBg(); });
 
@@ -527,8 +538,7 @@
   document.querySelectorAll('.qr').forEach(e => e.innerHTML = fakeQR(+e.dataset.size, +e.dataset.n, e.dataset.dark ? +e.dataset.dark : 0.5));
   document.getElementById('img-servicios').innerHTML = IMG_SERV;
   document.getElementById('img-docencia').innerHTML = IMG_DOC;
-  document.getElementById('building').innerHTML = BUILDING;
-
+  document.getElementById('building').innerHTML = '<img src="catedral.png" alt="Catedral">';
   // Al deslizar el dedo, el tono del fondo gira según la posición
   (() => {
     const card = document.getElementById('carnet');
