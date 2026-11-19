@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Universidad Ejemplo (demo)</title>
+<!-- Web app a pantalla completa al abrirla desde el icono de la pantalla de inicio (sin barra del navegador) -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ffffff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="U. Ejemplo">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  :root {
+    --primary: #1f6b45;
+    --primary-dark: #154d31;
+    --accent: #7cc35a;
+    --text: #1d2b24;
+    --muted: #5f6d66;
+    --line: #e4e9e6;
+    --bg: #ffffff;
+    --card-shadow: 0 1px 4px rgba(0,0,0,.12);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: "Open Sans", Roboto, "Segoe UI", sans-serif; }
+  button { font: inherit; }
+  .screen { display: none; min-height: 100%; }
+  .screen.active { display: block; }
+
+  /* ---------- Barra superior ---------- */
+  .topbar { height: 52px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2px; background: #fff; position: sticky; top: 0; z-index: 5; }
+  .icon-btn { width: 32px; height: 32px; border: 0; background: none; padding: 4px; color: var(--primary); }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .brand .sub { font-size: 7px; line-height: 1.1; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
+  .brand .sep { width: 1px; height: 20px; background: #b9c2bd; }
+  .brand .web { font-weight: 700; font-size: 17px; color: var(--primary-dark); letter-spacing: -.3px; }
+  .brand .web span { color: var(--accent); }
+
+  /* ---------- Inicio ---------- */
+  .profile { display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 12px 10px; border-bottom: 1px solid var(--line); }
+  .profile .name { font-size: 13px; color: var(--primary-dark); }
+  .profile .role { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; background: #dfe8e3; }
+  .grid { padding: 16px 6px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card { background: #fff; box-shadow: var(--card-shadow); border-radius: 3px; overflow: hidden;
+    border: 0; padding: 0; text-align: left; color: inherit; }
+  .card .img { height: 70px; }
+  .card .body { padding: 8px 6px 10px; }
+  .card h3 { margin: 0 0 12px; font-size: 13px; font-weight: 500; color: var(--primary-dark); }
+  .card p { margin: 0; font-size: 10.5px; color: var(--muted); line-height: 1.35; }
+  .card.wide { grid-column: 1 / -1; }
+  .card.wide h3 { margin-bottom: 8px; }
+  .home-links { text-align: center; padding: 14px 0 8px; }
+  .home-links a { display: block; color: var(--primary-dark); font-size: 11px; text-decoration: none; margin-bottom: 10px; }
+  .home-links a.small { font-size: 9.5px; }
+  .disclaimer { margin: 6px 12px 16px; padding: 8px 10px; border: 1px dashed #c9a227; background: #fff8e1;
+    color: #6b5400; font-size: 10.5px; line-height: 1.4; border-radius: 4px; text-align: center; }
+
+  /* ---------- Mis servicios ---------- */
+  .navbar { height: 48px; display: flex; align-items: center; padding: 0 8px; background: #fff;
+    position: sticky; top: 0; z-index: 5; }
+  .back { border: 0; background: none; color: var(--text); font-size: 14px; display: flex; align-items: center; gap: 4px; padding: 6px; }
+  .navbar .title { flex: 1; text-align: center; font-size: 14px; color: var(--text); margin-right: 28px; }
+  .svc-list { padding: 10px 10px 20px; }
+  .svc { border-radius: 4px; box-shadow: var(--card-shadow); margin-bottom: 14px; overflow: hidden; background: #fff; }
+  .svc .head { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: #fff; }
+  .svc .head .lbl { flex: 1; font-size: 13px; }
+  .svc .head svg { width: 18px; height: 18px; color: var(--primary-dark); }
+  .svc .pill { border: 1px solid #555; border-radius: 3px; background: #fff; font-size: 10px; padding: 2px 5px; color: #222; }
+  .svc .head + .desc { border-top: 1px solid rgba(0,0,0,.08); }
+  .svc .desc { padding: 12px 12px 14px; font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .svc.t-blue { background: #eef6f6; } .svc.t-blue .head { background: #eef6f6; }
+  .svc.t-green { background: #eef7ee; } .svc.t-green .head { background: #eef7ee; }
+  .svc.t-yellow { background: #fbfbe9; } .svc.t-yellow .head { background: #fbfbe9; }
+
+  /* ---------- Carnet ---------- */
+  #carnet { background: #fff; position: relative; overflow: hidden; }
+  .card-bar { height: 48px; display: flex; align-items: center; padding: 0 8px; background: #fff;
+    border-bottom: 3px solid #111; position: relative; z-index: 3; }
+  .card-bar.hidden { margin-top: -51px; }
+  .card-bar .title { flex: 1; text-align: center; font-size: 13px; }
+  .flip-btn { border: 0; background: #e7f3ec; color: var(--primary); font-size: 11px; border-radius: 12px;
+    padding: 4px 8px; display: flex; align-items: center; gap: 4px; }
+  .flip-btn svg { width: 13px; height: 13px; }
+  .face { position: relative; z-index: 2; min-height: calc(100vh - 51px); }
+  .card-bar.hidden ~ .face { min-height: 100vh; min-height: 100dvh; }   /* sin la barra, ocupa justo la pantalla visible */
+  /* Con la barra oculta el carnet no se desplaza */
+  html.no-scroll, html.no-scroll body { overflow: hidden; height: 100%; overscroll-behavior: none; }
+  /* Fondo: mosaico del logo; el color se desplaza al deslizar el dedo (filtro hue-rotate desde JS) */
+  /* 5 columnas × 20 filas: cada celda mide 20% del ancho y 5% del alto */
+  .dots { position: absolute; inset: 0; z-index: 0; opacity: .14; pointer-events: none; overflow: hidden; }
+  .dots svg { filter: blur(0.55px); }   /* difuminado: el texto de los logos no se lee del todo */
+  /* El frontal es una columna: contenido arriba y la torre empujada al fondo, siempre por debajo
+     del botón «Estudiante» (nunca se superponen) */
+  #front { flex-direction: column; }
+  #front > .front-content { order: 1; position: relative; z-index: 2; }
+  .building { position: relative; order: 2; z-index: 1; pointer-events: none; opacity: .9;
+    width: 100%; max-width: 480px; margin: auto auto 0; padding-top: 6px; }
+  .building svg { display: block; }
+  .front-head { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 18px 10px 4px; }
+  .front-head .sub { font-size: 11.4px; line-height: 1.15; color: var(--muted); text-transform: uppercase; }
+  .front-head .sub b { color: var(--primary); font-weight: 600; }
+  .front-head .sep { width: 1px; height: 26px; background: #b9c2bd; }
+  .front-head .web { font-size: 28px; font-weight: 800; color: var(--primary-dark); letter-spacing: -.8px;
+    display: inline-block; transform: scaleY(1.2); }
+  .front-head .web span { color: var(--accent); }
+  .course { text-align: center; font-size: clamp(20.4px, 5.5vw, 31px); color: var(--primary-dark); font-weight: 700; margin: -2px 0 22px; }
+  /* Todo el bloque escala con el ancho de pantalla (con tope en tablets) */
+  .front-body { --pad: min(6vw, 36px); max-width: 600px; margin: 0 auto; }
+  .front-main { display: grid; grid-template-columns: 0.9fr 1fr 1.3fr; gap: min(4vw, 24px); align-items: start; padding: 0 var(--pad); }
+  .photo { width: 80%; max-width: 96px; aspect-ratio: 54 / 86; border-radius: 8px; margin-top: -10px; overflow: hidden; background: #e6ece8; }
+  .photo svg { width: 100%; height: 100%; display: block; }
+  .qr-col { display: flex; flex-direction: column; align-items: center; gap: min(3vw, 18px); }
+  .qr-col .qr { width: 70%; max-width: 91px; display: block; }
+  .qr-col .qr svg { width: 100%; height: auto; display: block; }
+  .front-main > div:last-child { padding-left: min(1vw, 6px); }
+  .esc-mini { margin-top: 8px; width: clamp(42px, 12.5vw, 72px); aspect-ratio: 34 / 24; border-radius: 5px; background: linear-gradient(135deg,#2a2a8a,#4b2a9a);
+    display: grid; place-items: center; color: #ffd84a; font-size: clamp(7.5px, 2.1vw, 12.5px); }
+  .clock { font-size: clamp(13.2px, 3.7vw, 20.4px); color: var(--text); line-height: 1.25; }
+  .clock .sec { font-weight: 700; }
+  .clock .valid { margin-top: 10px; }
+  .inline-flip { margin-top: 14px; font-size: clamp(13.2px, 3.5vw, 18px); padding: 5px 10px; border-radius: 14px; }
+  .inline-flip svg { width: 16px; height: 16px; }
+  /* Franja blanca a todo el ancho detrás del nombre, DNI y NIU, tapando el fondo */
+  .who { padding: 1px var(--pad); margin-top: min(3vw, 18px); background: #fff;
+    box-shadow: 0 0 0 100vmax #fff; clip-path: inset(0 -100vmax); }
+  .who .full { font-size: clamp(16.5px, 4.6vw, 25px); color: var(--primary-dark); font-weight: 500; text-transform: uppercase; }
+  .who .line { font-size: clamp(13.8px, 3.8vw, 20.5px); color: var(--primary-dark); margin-top: 2px; }
+  .role-pill { display: flex; justify-content: flex-end; padding: 10px var(--pad); position: relative; z-index: 3; }
+  .role-pill span { background: var(--primary-dark); color: #fff; font-size: clamp(13.2px, 3.6vw, 19px); padding: 0.45em 0.8em; border-radius: 2em; }
+  .demo-band { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; background: rgba(201,162,39,.92);
+    color: #fff; text-align: center; font-size: 11px; font-weight: 700; letter-spacing: .5px; padding: 6px 4px; }
+
+  .back-face .rhead { display: flex; gap: 12px; padding: 10px 12px; align-items: center; }
+  .back-face .rhead .av { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; background: #e6ece8; }
+  .back-face .rhead .t1 { font-size: 14px; color: var(--text); }
+  .back-face .rhead .t2 { font-size: 12.5px; color: var(--text); }
+  .back-face .rhead .t3 { font-size: 10px; color: var(--muted); font-family: monospace; }
+  .esc-bar { background: #233a5e; color: #fff; font-size: 12.5px; font-weight: 600; padding: 5px 10px; }
+  .esc-row { display: flex; gap: 12px; padding: 16px 12px; align-items: center; justify-content: center; border-bottom: 1px solid var(--line); }
+  .esc-card { width: 143px; height: 107px; border-radius: 10px; font-size: 11.5px !important; background: linear-gradient(135deg,#2f2f9e,#5b2fb0);
+    display: grid; place-items: center; color: #ffd84a; font-size: 9px; font-weight: 700; letter-spacing: .5px; text-align: center; }
+
+  /* Toast */
+  .toast { position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); background: rgba(30,30,30,.9);
+    color: #fff; font-size: 12px; padding: 8px 14px; border-radius: 18px; opacity: 0; transition: opacity .2s;
+    pointer-events: none; z-index: 50; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ===================== INICIO ===================== -->
+<section id="home" class="screen active">
+  <div class="topbar">
+    <button class="icon-btn" aria-label="Menú" data-na>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="brand">
+      <span class="logo-sm"></span>
+      <div class="sub">Universidad<br>Ejemplo</div>
+      <div class="sep"></div>
+      <div class="web">uejemplo<span>.demo</span></div>
+    </div>
+    <button class="icon-btn" aria-label="Escáner QR" data-na><span class="qr-icon"></span></button>
+  </div>
+
+  <div class="profile">
+    <div>
+      <div class="name" data-f="nombre"></div>
+      <div class="role">Estudiante</div>
+    </div>
+    <div class="avatar"><span class="avatar-svg"></span></div>
+  </div>
+
+  <div class="grid">
+    <button class="card" onclick="go('services')">
+      <div class="img" id="img-servicios"></div>
+      <div class="body"><h3>Servicios</h3><p>Carnet universitario, escáner QR y otros servicios universitarios</p></div>
+    </button>
+    <button class="card" data-na>
+      <div class="img" id="img-docencia"></div>
+      <div class="body"><h3>Docencia</h3><p>Info académica: asignaturas, notas, créditos realizados…</p></div>
+    </button>
+    <button class="card wide" data-na>
+      <div class="body"><h3>Información institucional</h3><p>Noticias, planes de estudio, directorio corporativo,…</p></div>
+    </button>
+    <button class="card" data-na>
+      <div class="body"><h3>Notificaciones</h3><p>Últimos mensajes recibidos</p></div>
+    </button>
+    <button class="card" data-na>
+      <div class="body"><h3>Preferencias</h3><p>Configura tus notificaciones y más</p></div>
+    </button>
+  </div>
+
+  <div class="home-links">
+    <a href="#" data-na>Aviso legal, información y contacto</a>
+    <a href="#" class="small" data-na>Servicio Central de Informática</a>
+  </div>
+  <div class="disclaimer">
+    <b>Aplicación NO oficial.</b> Recreación personal con fines de aprendizaje.
+    «Universidad Ejemplo» es ficticia y todos los datos son inventados. No tiene validez como documento.
+  </div>
+</section>
+
+<!-- ===================== MIS SERVICIOS ===================== -->
+<section id="services" class="screen">
+  <div class="navbar">
+    <button class="back" onclick="goBack()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 5l-7 7 7 7"/></svg>Volver
+    </button>
+    <div class="title">Mis servicios</div>
+    <button class="icon-btn" aria-label="Escáner QR" data-na style="margin-left:-28px"><span class="qr-icon"></span></button>
+  </div>
+  <div class="svc-list">
+    <div class="svc">
+      <div class="head">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm-1 4h20v3H2z"/></svg>
+        <span class="lbl">Carnet universitario</span>
+        <button class="pill" onclick="openCard()">Ver</button>
+      </div>
+    </div>
+    <div class="svc t-blue">
+      <div class="head">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 2a7.5 7.5 0 0 0-7.1 9.9L2 17.3V22h4.7v-2.4h2.4v-2.4h2.4l1.6-1.6A7.5 7.5 0 1 0 14.5 2zm2.2 7.3a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
+        <span class="lbl">Aparcamientos y puertas</span>
+        <button class="pill" data-na>Ver</button>
+      </div>
+      <div class="desc">Lo que puedes abrir en este momento y desde tu ubicación actual.</div>
+    </div>
+    <div class="svc t-green">
+      <div class="head">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11a2 2 0 0 1 2 2v5h-2v2h-3v-2H8v2H5v-2H3v-5a2 2 0 0 1 2-2zm2.2 0h9.6l-1-3H8.2zM6.5 16a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm11 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></svg>
+        <span class="lbl">Comparte coche</span>
+        <button class="pill" data-na>Ir</button>
+      </div>
+      <div class="desc">Conecta con tu campus, viaja en verde.</div>
+    </div>
+    <div class="svc t-yellow">
+      <div class="head">
+        <span class="qr-icon" style="color:var(--primary-dark)"></span>
+        <span class="lbl">Escáner QR</span>
+        <button class="pill" data-na>Escanear</button>
+      </div>
+      <div class="desc">Desde aquí podrás escanear códigos QR-UEJEMPLO</div>
+    </div>
+    <div class="svc">
+      <div class="head">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zm0 14a8 8 0 0 1-6.2-2.9c.9-1.9 3.3-3.1 6.2-3.1s5.3 1.2 6.2 3.1A8 8 0 0 1 12 20z"/></svg>
+        <span class="lbl">Tarjetas de visita</span>
+        <button class="pill" data-na>Ver</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CARNET ===================== -->
+<section id="carnet" class="screen">
+  <div class="card-bar hidden" id="cardBar">
+    <button class="back" onclick="goBack()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 5l-7 7 7 7"/></svg>Volver
+    </button>
+    <div class="title">Carnet universitario</div>
+    <button class="flip-btn" onclick="flip(event)"><span class="flip-ico"></span><span class="flip-lbl">Reverso</span></button>
+  </div>
+
+  <div class="face" id="front">
+    <div class="dots"></div>
+    <div class="building" id="building"></div>
+    <div class="front-content">
+      <div class="front-head">
+        <span class="logo-lg"></span>
+        <div class="sub">Universidad<br><b>Ejemplo</b></div>
+        <div class="sep"></div>
+        <div class="web">uejemplo<span>.demo</span></div>
+      </div>
+      <div class="course" data-f="curso"></div>
+      <div class="front-body">
+      <div class="front-main">
+        <div class="photo"><span class="photo-svg"></span></div>
+        <div class="qr-col">
+          <span class="qr" data-size="64" data-n="23" data-dark="0.44"></span>
+          <div class="esc-mini">ESC</div>
+        </div>
+        <div>
+          <div class="clock">
+            <div><span class="hm">--:--</span>:<span class="sec">--</span></div>
+            <div class="date">--/--/----</div>
+            <div class="valid">Válido hasta<br><span data-f="valido"></span></div>
+          </div>
+          <button class="flip-btn inline-flip" id="inlineFlip" onclick="flip(event)"><span class="flip-ico"></span>Reverso</button>
+        </div>
+      </div>
+      <div class="who">
+        <div class="full" data-f="nombre"></div>
+        <div class="line">DNI: <span data-f="dni"></span></div>
+        <div class="line">NIU: <span data-f="niu"></span></div>
+      </div>
+      <div class="role-pill"><span>Estudiante</span></div>
+      </div>
+    </div>
+    <div class="demo-band">DEMO · NO OFICIAL · SIN VALIDEZ</div>
+  </div>
+
+  <div class="face back-face" id="back" style="display:none">
+    <div class="rhead">
+      <div class="av"><span class="avatar-svg"></span></div>
+      <div>
+        <div class="t1" data-f="curso"></div>
+        <div class="t2" data-f="nombreCap"></div>
+        <div class="t3" data-f="niu"></div>
+        <div class="t3">Válido hasta: <span data-f="valido"></span></div>
+      </div>
+    </div>
+    <div class="esc-bar">European Student Card · DEMO</div>
+    <div class="esc-row">
+      <span class="qr" data-size="130" data-n="57"></span>
+      <div class="esc-card">★ ★ ★<br>EXAMPLE<br>STUDENT<br>★ ★ ★</div>
+    </div>
+    <div class="demo-band">DEMO · NO OFICIAL · SIN VALIDEZ</div>
+  </div>
+</section>
+
+<div class="toast" id="toast">No disponible en esta demo</div>
+
+<script>
+  // ---------- Datos de ejemplo (ficticios) ----------
+  const DATA = {
+    nombre: 'Nombre Apellido Apellido',
+    nombreCap: 'Nombre Apellido Apellido',
+    dni: '00000000T',
+    niu: '0000000000',
+    curso: 'Curso 2026/2027',
+    valido: '30/09/2027'
+  };
+  document.querySelectorAll('[data-f]').forEach(el => el.textContent = DATA[el.dataset.f]);
+
+  // ---------- Gráficos inline ----------
+  const LOGO = s => `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#fff" stroke="#1f6b45" stroke-width="2"/><circle cx="20" cy="20" r="14" fill="#1f6b45"/><path d="M9 18l11-6 11 6-11 6z" fill="#fff"/><path d="M13 21v5c0 2 14 2 14 0v-5l-7 4z" fill="#fff"/><path d="M29 19h1.5v8H29z" fill="#9bd77a"/></svg>`;
+  const PERSON = (w, h) => `<svg width="${w}" height="${h}" viewBox="0 0 54 86" preserveAspectRatio="xMidYMid slice"><rect width="54" height="86" fill="#e3ebe6"/><circle cx="27" cy="32" r="13" fill="#a9bdb1"/><path d="M4 86c0-18 10-30 23-30s23 12 23 30z" fill="#a9bdb1"/></svg>`;
+  const QR_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3 3h8v8H3zm2 2v4h4V5zm8-2h8v8h-8zm2 2v4h4V5zM3 13h8v8H3zm2 2v4h4v-4zm8-2h2v2h-2zm4 0h4v2h-4zm-4 4h2v4h-2zm4 0h2v2h2v4h-4v-2h-2v-2h2zm2-2h2v2h-2z"/></svg>`;
+  const FLIP = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9h14l-4-4M20 15H6l4 4"/></svg>`;
+
+  // QR decorativo (patrón determinista con marcadores de posición; no codifica datos reales)
+  // n = módulos por lado (densidad). Se dibuja en una cuadrícula de 1 unidad por módulo y el SVG escala.
+  function fakeQR(size, n, dark = 0.5) {
+    let seed = 20262027 + n;
+    const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+    const inBox = (x, y, bx, by, s) => x >= bx && x < bx + s && y >= by && y < by + s;
+    const reserved = (x, y) =>
+      inBox(x, y, -1, -1, 9) || inBox(x, y, n - 8, -1, 9) || inBox(x, y, -1, n - 8, 9) ||   // marcadores + margen
+      inBox(x, y, n - 9, n - 9, 5) ||                                                     // patrón de alineación
+      x === 6 || y === 6;                                                                 // líneas de temporización
+    let r = '';
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++)
+      if (!reserved(x, y) && rnd() < dark) r +=`M${x} ${y}h1v1h-1z`;
+    // Líneas de temporización (alternas) entre marcadores
+    for (let i = 8; i < n - 8; i += 2) r += `M${i} 6h1v1h-1zM6 ${i}h1v1h-1z`;
+    const ring = (x, y, s) => `M${x} ${y}h${s}v${s}h-${s}z`;
+    const finder = (fx, fy) => `<path d="${ring(fx, fy, 7)}"/><path d="${ring(fx + 1, fy + 1, 5)}" fill="#fff"/><path d="${ring(fx + 2, fy + 2, 3)}"/>`;
+    const ax = n - 9;
+    const align = `<path d="${ring(ax, ax, 5)}"/><path d="${ring(ax + 1, ax + 1, 3)}" fill="#fff"/><path d="${ring(ax + 2, ax + 2, 1)}"/>`;
+    return `<svg width="${size}" height="${size}" viewBox="-1 -1 ${n + 2} ${n + 2}" shape-rendering="crispEdges"><rect x="-1" y="-1" width="${n + 2}" height="${n + 2}" fill="#fff"/><g fill="#000"><path d="${r}"/>${finder(0, 0)}${finder(n - 7, 0)}${finder(0, n - 7)}${align}</g></svg>`;
+  }
+
+  // Ilustraciones de las tarjetas de inicio
+  const IMG_SERV = `<svg width="100%" height="70" viewBox="0 0 160 70" preserveAspectRatio="xMidYMid slice"><rect width="160" height="70" fill="#cfe6f2"/><rect x="40" y="10" width="90" height="38" fill="#f4f4f0"/><g fill="#9fb4c0">${Array.from({length:6},(_,i)=>`<rect x="${48+i*13}" y="16" width="8" height="8"/><rect x="${48+i*13}" y="30" width="8" height="8"/>`).join('')}</g><rect y="44" width="160" height="26" fill="#6e9b52"/><g fill="#e98bb8">${Array.from({length:14},(_,i)=>`<circle cx="${6+i*11}" cy="${50+(i%3)*5}" r="3"/>`).join('')}</g></svg>`;
+  const IMG_DOC = `<svg width="100%" height="70" viewBox="0 0 160 70" preserveAspectRatio="xMidYMid slice"><rect width="160" height="70" fill="#4d82c4"/><rect x="0" y="8" width="160" height="50" fill="#b9645a"/><g fill="#e8e4dc">${Array.from({length:8},(_,i)=>`<rect x="${6+i*20}" y="14" width="12" height="10"/><rect x="${6+i*20}" y="30" width="12" height="10"/>`).join('')}</g><rect x="58" y="36" width="44" height="22" fill="#234a7a"/><rect y="58" width="160" height="12" fill="#c9c3b5"/></svg>`;
+  // ---------- Torre en estilo boceto a trazo (dibujo propio) ----------
+  // Cada línea se traza dos veces con un ligero temblor para imitar un dibujo a mano.
+  const SK = (() => {
+    let s = 7;
+    const r = () => ((s = (s * 16807) % 2147483647) / 2147483647 - .5);
+    const f = v => v.toFixed(1);
+    const line = (pts, j = 1.4, passes = 2) => {
+      let d = '';
+      for (let p = 0; p < passes; p++) d += 'M' + pts.map(([x, y]) => `${f(x + r() * j)} ${f(y + r() * j)}`).join('L');
+      return d;
+    };
+    const rect = (x, y, w, h) => line([[x, y], [x + w, y], [x + w, y + h], [x, y + h], [x, y]]);
+    const arc = (cx, cy, rx, ry, a0, a1, step = 15) => {
+      const pts = [];
+      for (let a = a0; a0 > a1 ? a >= a1 : a <= a1; a += a0 > a1 ? -step : step) {
+        const t = a * Math.PI / 180; pts.push([cx + rx * Math.cos(t), cy - ry * Math.sin(t)]);
+      }
+      return pts;
+    };
+    const arch = (x, y, w, h) => line([[x, y + h], ...arc(x + w / 2, y + w / 2, w / 2, w / 2, 180, 0, 30), [x + w, y + h], [x, y + h]]);
+    const hatch = (x, y, w, h, step = 5) => {
+      let d = '';
+      for (let i = step; i < w + h; i += step)
+        d += line([[x + Math.min(i, w), y + Math.max(0, i - w)], [x + Math.max(0, i - h), y + Math.min(i, h)]], .9, 1);
+      return d;
+    };
+    return { line, rect, arc, arch, hatch };
+  })();
+
+  const BUILDING = (() => {
+    const { line, rect, arc, arch, hatch } = SK;
+    let d = '';
+    // Remate, linterna y cúpula
+    d += line([[70, 8], [70, 24]]) + line(arc(70, 26, 3, 3, 0, 360, 45));
+    d += rect(63, 28, 14, 8);
+    d += line(arc(70, 58, 23, 22, 180, 0));
+    d += line([[70, 36], [60, 58]]) + line([[70, 36], [80, 58]]) + line([[70, 36], [70, 58]], 1, 1);
+    // Cornisas
+    d += rect(44, 58, 52, 6) + line([[38, 64], [102, 64], [98, 72], [42, 72], [38, 64]]);
+    // Cuerpo superior y ventanas
+    d += rect(46, 72, 48, 52);
+    d += arch(57, 80, 9, 20) + arch(74, 80, 9, 20) + arch(57, 104, 9, 14) + arch(74, 104, 9, 14);
+    d += hatch(86, 72, 8, 52, 4);
+    // Balcón con balaustrada
+    d += rect(30, 124, 80, 8) + line([[24, 132], [116, 132], [110, 140], [30, 140], [24, 132]]);
+    for (let i = 0; i < 10; i++) d += line([[34 + i * 8, 125], [34 + i * 8, 131]], .6, 1);
+    // Cuerpo principal
+    d += rect(34, 140, 72, 160);
+    d += arch(45, 152, 15, 30) + arch(80, 152, 15, 30) + arch(45, 200, 15, 30) + arch(80, 200, 15, 30);
+    d += arch(56, 252, 28, 48) + line([[70, 266], [70, 300]], 1, 1);
+    d += hatch(96, 140, 10, 160, 5);
+    // Ala lateral
+    // (el ala llega hasta x=460 para cubrir el ancho cuando la torre se dibuja más pequeña)
+    d += line([[100, 188], [460, 188]]) + line([[100, 196], [460, 196]]) + line([[100, 188], [100, 196]]);
+    d += line([[106, 196], [106, 300]]);
+    d += hatch(106, 196, 354, 7, 4);
+    for (let i = 0; i < 13; i++) {
+      const x = 118 + i * 26;
+      d += arch(x, 212, 14, 28) + rect(x, 256, 14, 24);
+      d += line([[x - 3, 240], [x + 17, 240]], .8, 1);
+    }
+    // Palmera
+    d += line([[10, 300], [13, 260], [15, 225], [14, 186]]) + line([[20, 300], [21, 262], [20, 226], [17, 186]]);
+    for (let y = 200; y < 296; y += 9) d += line([[11, y], [20, y + 3]], .6, 1);
+    const frond = pts => line(pts, 1.2);
+    d += frond([[16, 184], [2, 178], [-10, 186]]) + frond([[16, 184], [6, 168], [-6, 164]]);
+    d += frond([[16, 184], [28, 166], [44, 166]]) + frond([[16, 184], [34, 178], [46, 190]]);
+    d += frond([[16, 184], [18, 166], [24, 156]]);
+    return `<svg width="100%" viewBox="0 0 300 300" preserveAspectRatio="xMinYMax meet">
+      <path d="${d}" fill="none" stroke="#2f5d7a" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>
+    </svg>`;
+  })();
+
+  // ---------- Fondo del carnet: mosaico del logo + nombre ----------
+  // 4,5 columnas visibles (la de la derecha queda cortada por la mitad) × 20 filas.
+  // Cada logo tiene su propio color; las franjas de igual color van en diagonal a ~70° hacia la derecha.
+  const TILE = `<g transform="translate(4 11) scale(.45)"><circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="20" cy="20" r="13" fill="currentColor"/><path d="M9 18l11-6 11 6-11 6z" fill="#fff"/><path d="M13 21v5c0 2 14 2 14 0v-5l-7 4z" fill="#fff"/></g><g font-family="sans-serif" font-size="7.5" font-weight="700" fill="currentColor"><text x="25" y="19">UNIVERSIDAD</text><text x="25" y="28">EJEMPLO</text></g>`;
+  // Silueta rellena de la torre (mismas coordenadas 0–300 que el dibujo) para recortar el fondo
+  const TOWER_SILHOUETTE = [
+    'M68 8h4v18h-4z',                              // remate
+    'M63 24h14v12h-14z',                           // linterna
+    'M47 58A23 22 0 0 1 93 58z',                   // cúpula
+    'M38 58h64v14h-64z',                           // cornisas
+    'M46 72h48v52h-48z',                           // cuerpo superior
+    'M24 124h92v16h-92z',                          // balcón
+    'M34 140h72v160h-72z',                         // cuerpo principal
+    'M100 188h360v112h-360z',                      // ala lateral
+    'M9 186h13v114h-13z',                          // tronco de la palmera
+    'M-10 186L2 176L6 166L-6 162L16 182L24 156L28 166L44 164L34 178L46 190L16 186z' // hojas
+  ];
+  function drawBg() {
+    const COLS = 4.5, ROWS = 20, ANG = 70 * Math.PI / 180;
+    document.querySelectorAll('.dots').forEach(el => {
+      const W = el.clientWidth, H = el.clientHeight;
+      if (!W || !H) return;
+      const tw = W / COLS, th = H / ROWS, s = Math.min(tw / 76, th / 40);
+      // Entre el borde inferior del botón «Estudiante» y el comienzo del dibujo de la torre el fondo
+      // queda en blanco; junto al botón y detrás de la torre sí se ve.
+      const top0 = el.getBoundingClientRect().top;
+      const pill = el.parentElement.querySelector('.role-pill span');
+      const bld = el.parentElement.querySelector('.building svg');
+      const OFF = th * (1 / 2 + 1 / 3);              // desfase vertical del mosaico
+      // A la altura de «Estudiante»: una fila completa bajo la franja del nombre y otra cortada
+      // por la mitad en el borde inferior del botón. Se ajusta el espacio sobre el botón para que cuadre.
+      const who = el.parentElement.querySelector('.who');
+      const pillRow = el.parentElement.querySelector('.role-pill');
+      if (who && pill && pillRow) {
+        pillRow.style.paddingTop = '0px';
+        const bandBottom = who.getBoundingClientRect().bottom - top0;
+        const pillBottom0 = pill.getBoundingClientRect().bottom - top0;
+        let ys = OFF + Math.ceil((bandBottom - OFF) / th) * th;   // primera fila que empieza bajo la franja
+        let pad = ys + th * 1.5 - pillBottom0;
+        if (pad < 0) pad += th;
+        pillRow.style.paddingTop = pad.toFixed(1) + 'px';
+        pillRow.style.marginTop = '-20px';            // «Estudiante» subido 20 px
+      }
+      const cutY = pill ? pill.getBoundingClientRect().bottom - top0 : H;
+      const endY = bld ? bld.getBoundingClientRect().top - top0 : H;
+      let g = '';
+      // El mosaico empieza media fila + un tercio de fila más abajo
+      for (let r = 0; r < ROWS; r++) for (let c = 0; c < Math.ceil(COLS); c++) {
+        const x = c * tw, y = r * th + OFF;
+        // Constante a lo largo de la dirección (cos70°, -sin70°): franjas inclinadas 70° hacia la derecha
+        const v = (x + tw / 2) * Math.sin(ANG) + (y + th / 2) * Math.cos(ANG);
+        const hue = Math.round(v * 0.9) % 360;
+        g += `<g color="hsl(${hue},75%,45%)" transform="translate(${(x + (tw - 76 * s) / 2).toFixed(1)} ${(y + (th - 40 * s) / 2).toFixed(1)}) scale(${s.toFixed(3)})">${TILE}</g>`;
+      }
+      // Recorte: el fondo se ve de arriba hasta el borde inferior de «Estudiante» y, por debajo,
+      // solo dentro de la silueta de la torre y la palmera; fuera de sus contornos queda blanco.
+      let sil = '';
+      if (bld) {
+        const br = bld.getBoundingClientRect(), er = el.getBoundingClientRect();
+        const k = br.height / 300, bx = br.left - er.left, by = br.top - er.top;   // escala por la altura
+        const t = `transform="translate(${bx.toFixed(1)} ${by.toFixed(1)}) scale(${k.toFixed(4)})"`;
+        sil = TOWER_SILHOUETTE.map(d => `<path ${t} d="${d}"/>`).join('');
+      }
+      const clip = `<clipPath id="bgclip"><rect x="0" y="0" width="${W}" height="${Math.max(0, cutY)}"/>${sil}</clipPath>`;
+      el.innerHTML = `<svg width="${W}" height="${H}" style="display:block"><defs>${clip}</defs><g clip-path="url(#bgclip)">${g}</g></svg>`;
+    });
+  }
+  // La torre mide 100 px menos de alto que de ancho; el viewBox se ensancha para que el dibujo
+  // conserve sus proporciones (más pequeño) y el ala lateral llegue hasta el borde derecho.
+  function sizeTower() {
+    const svg = document.querySelector('#building svg');
+    const W = document.getElementById('building').clientWidth;
+    if (!svg || !W) return;
+    const h = Math.max(160, W - 100);
+    svg.style.height = h + 'px';
+    svg.setAttribute('viewBox', `0 0 ${(300 * W / h).toFixed(1)} 300`);
+  }
+  window.addEventListener('resize', () => { sizeTower(); drawBg(); });
+
+  document.querySelectorAll('.logo-sm').forEach(e => e.innerHTML = LOGO(26));
+  document.querySelectorAll('.logo-lg').forEach(e => e.innerHTML = LOGO(60));
+  document.querySelectorAll('.avatar-svg').forEach(e => e.innerHTML = PERSON(30, 30));
+  document.querySelectorAll('.photo-svg').forEach(e => e.innerHTML = PERSON(54, 86));
+  document.querySelectorAll('.qr-icon').forEach(e => e.innerHTML = QR_ICON);
+  document.querySelectorAll('.flip-ico').forEach(e => e.innerHTML = FLIP);
+  document.querySelectorAll('.qr').forEach(e => e.innerHTML = fakeQR(+e.dataset.size, +e.dataset.n, e.dataset.dark ? +e.dataset.dark : 0.5));
+  document.getElementById('img-servicios').innerHTML = IMG_SERV;
+  document.getElementById('img-docencia').innerHTML = IMG_DOC;
+  document.getElementById('building').innerHTML = BUILDING;
+
+  // Al deslizar el dedo, el tono del fondo gira según la posición
+  (() => {
+    const card = document.getElementById('carnet');
+    let base = 0, last = null;
+    const paint = h => card.querySelectorAll('.dots').forEach(e => e.style.filter = `hue-rotate(${h}deg) saturate(1.8)`);
+    const move = (x, y) => {
+      if (last) base = (base + Math.hypot(x - last[0], y - last[1]) * 0.9) % 360;
+      last = [x, y]; paint(base);
+    };
+    card.addEventListener('touchstart', e => { last = [e.touches[0].clientX, e.touches[0].clientY]; }, { passive: true });
+    card.addEventListener('touchmove', e => move(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+    card.addEventListener('touchend', () => { last = null; });
+    card.addEventListener('mousemove', e => { if (e.buttons) move(e.clientX, e.clientY); else last = null; });
+  })();
+
+  // ---------- Navegación ----------
+  const stack = ['home'];
+  function show(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === id));
+    window.scrollTo(0, 0);
+    lockScroll();
+  }
+  // Bloquea el desplazamiento mientras se ve el carnet con la barra superior oculta
+  function lockScroll() {
+    const onCard = document.getElementById('carnet').classList.contains('active');
+    const barHidden = document.getElementById('cardBar').classList.contains('hidden');
+    document.documentElement.classList.toggle('no-scroll', onCard && barHidden);
+    if (onCard && barHidden) window.scrollTo(0, 0);
+  }
+  function go(id) { stack.push(id); show(id); }
+  window.goBack = function () {
+    if (stack.length <= 1) return false;
+    stack.pop(); show(stack[stack.length - 1]); return true;
+  };
+
+  // ---------- Carnet ----------
+  let showingBack = false;
+  const bar = document.getElementById('cardBar');
+  function openCard() {
+    showingBack = false; renderFace(); bar.classList.add('hidden'); go('carnet'); sizeTower(); drawBg();
+  }
+  function renderFace() {
+    document.getElementById('front').style.display = showingBack ? 'none' : 'flex';
+    document.getElementById('back').style.display = showingBack ? 'block' : 'none';
+    document.querySelectorAll('.flip-lbl').forEach(e => e.textContent = showingBack ? 'Anverso' : 'Reverso');
+    // Con la cabecera oculta, el botón para girar aparece dentro del carnet
+    document.getElementById('inlineFlip').style.visibility = bar.classList.contains('hidden') ? 'visible' : 'hidden';
+  }
+  function flip(ev) { ev.stopPropagation(); showingBack = !showingBack; renderFace(); }
+  document.getElementById('carnet').addEventListener('click', e => {
+    if (e.target.closest('.card-bar')) return;
+    bar.classList.toggle('hidden'); renderFace(); lockScroll();
+  });
+
+  const pad = n => String(n).padStart(2, '0');
+  function tick() {
+    const d = new Date();
+    document.querySelectorAll('.hm').forEach(e => e.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`);
+    document.querySelectorAll('.sec').forEach(e => e.textContent = pad(d.getSeconds()));
+    document.querySelectorAll('.date').forEach(e => e.textContent = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`);
+  }
+  tick(); setInterval(tick, 1000);
+
+  // ---------- Elementos sin función en la demo ----------
+  const toast = document.getElementById('toast'); let tt;
+  document.querySelectorAll('[data-na]').forEach(el => el.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    toast.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove('show'), 1500);
+  }));
+
+  // Funcionamiento sin conexión cuando se sirve por HTTPS (web publicada). En la APK no se usa.
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
